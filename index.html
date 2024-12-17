@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html><head lang="en"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+    <title>VF-NeRF</title>
+
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:image" content="https://leosegre.github.io/Optimize-the-Unseen/img/teaser.jpg">
+    <meta property="og:image:type" content="image/jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://leosegre.github.io/Optimize-the-Unseen">
+    <meta property="og:title" content="Optimize the Unseen: Fast NeRF Cleanup with Free Space Prior">
+    <meta property="og:description" content="Neural Radiance Fields (NeRF) have advanced photorealistic novel view synthesis, but their reliance on photometric reconstruction introduces artifacts, commonly known as "floaters". These artifacts degrade novel view quality, especially in areas unseen by the training cameras. We present a fast, post-hoc NeRF cleanup method that eliminates such artifacts by enforcing our Free Space Prior, effectively minimizing floaters without disrupting the NeRF’s representation of observed regions. Unlike existing approaches that rely on either Maximum Likelihood (ML) estimation to fit the data or a complex, local data-driven prior, our method adopts a Maximum-a-Posteriori (MAP) approach, selecting the optimal model parameters under a simple global prior assumption that unseen regions should remain empty. This enables our method to clean artifacts in both seen and unseen areas, enhancing novel view quality even in challenging scene regions. Our method is comparable with existing NeRF cleanup models while being \textbf{$\mathbf{2.5 \times}$ faster} in inference time, requires \textbf{no additional memory} beyond the original NeRF, and achieves cleanup training in less than 30 seconds. Our code will be made publically available.">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Optimize the Unseen: Fast NeRF Cleanup with Free Space Prior">
+    <meta name="twitter:description" content="Neural Radiance Fields (NeRF) have advanced photorealistic novel view synthesis, but their reliance on photometric reconstruction introduces artifacts, commonly known as "floaters". These artifacts degrade novel view quality, especially in areas unseen by the training cameras. We present a fast, post-hoc NeRF cleanup method that eliminates such artifacts by enforcing our Free Space Prior, effectively minimizing floaters without disrupting the NeRF’s representation of observed regions. Unlike existing approaches that rely on either Maximum Likelihood (ML) estimation to fit the data or a complex, local data-driven prior, our method adopts a Maximum-a-Posteriori (MAP) approach, selecting the optimal model parameters under a simple global prior assumption that unseen regions should remain empty. This enables our method to clean artifacts in both seen and unseen areas, enhancing novel view quality even in challenging scene regions. Our method is comparable with existing NeRF cleanup models while being \textbf{$\mathbf{2.5 \times}$ faster} in inference time, requires \textbf{no additional memory} beyond the original NeRF, and achieves cleanup training in less than 30 seconds. Our code will be made publically available.">
+    <meta name="twitter:image" content="https://leosegre.github.io/Optimize-the-Unseen/img/teaser.jpg">
+
+
+    <!-- mirror: F0%9F%AA%9E&lt -->
+    <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;%E2%9C%A8&lt;/text&gt;&lt;/svg&gt;">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/codemirror.min.css">
+    <link rel="stylesheet" href="css/app.css">
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/codemirror.min.js"></script>
+    <script src="js/clipboard.min.js"></script>
+    <script src="js/video_comparison.js"></script>
+    <script src="js/app.js"></script>
+</head>
+
+<body>
+    <div class="container" id="header" style="text-align: center; margin: auto;">
+        <div class="row" id="title-row" style="max-width: 100%; margin: 0 auto; display: inline-block">
+            <h2 class="col-md-12 text-center" id="title">
+                <b>Optimize the Unseen</b>: Fast NeRF Cleanup with Free Space Prior<br>
+            </h2>
+        </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://scholar.google.co.il/citations?hl=iw&user=A7FWhoIAAAAJ">Leo Segre</a>,
+              </span>
+              <span class="author-block">
+                <a href="https://scholar.google.co.il/citations?hl=iw&user=hpItE1QAAAAJ">Shai Avidan</a>
+              </span>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Tel Aviv University</span>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('author-row').style.maxWidth = document.getElementById("title-row").clientWidth + 'px';
+    </script>
+    <div class="container" id="main">
+        <div class="row">
+                <div class="col-sm-2 col-sm-offset-5 text-center">
+                    <ul class="nav nav-pills nav-justified">
+                        <li>
+                            <a href="https://arxiv.org/abs/2404.03349">
+                            <img src="./img/arxiv.png" height="25px">
+                                <h4><strong>Paper</strong></h4>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://github.com/leosegre/Optimize-the-Unseen" target="_blank">
+                            <img src="img/github.png" height="25px">
+                                <h4><strong>Code</strong></h4>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <div class="video-compare-container" id="pikachuDiv">
+                    <video class="video" id="pikachu" loop playsinline autoPlay muted src="video/pikachu.mp4" onplay="resizeAndPlay(this)"></video>
+                    <canvas height=0 class="videoMerge" id="pikachuMerge"></canvas>
+                </div>
+			</div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <h3>
+                    Abstract
+                </h3>
+                <p class="text-justify">
+                Neural Radiance Fields (NeRF) have advanced photorealistic novel view synthesis, but their reliance on photometric reconstruction introduces artifacts, commonly known as "floaters". These artifacts degrade novel view quality, especially in areas unseen by the training cameras. We present a fast, post-hoc NeRF cleanup method that eliminates such artifacts by enforcing our Free Space Prior, effectively minimizing floaters without disrupting the NeRF’s representation of observed regions. Unlike existing approaches that rely on either Maximum Likelihood (ML) estimation to fit the data or a complex, local data-driven prior, our method adopts a Maximum-a-Posteriori (MAP) approach, selecting the optimal model parameters under a simple global prior assumption that unseen regions should remain empty. This enables our method to clean artifacts in both seen and unseen areas, enhancing novel view quality even in challenging scene regions. Our method is comparable with existing NeRF cleanup models while being \textbf{$\mathbf{2.5 \times}$ faster} in inference time, requires \textbf{no additional memory} beyond the original NeRF, and achieves cleanup training in less than 30 seconds. Our code will be made publically available.
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <h3>
+                    Density Cleanup
+                </h3>
+                <div class="text-justify">
+                    Visualization of how Free Space Prior works on a NeRF scene (Pikachu scene from Nerfbusters dataset):
+                    <br><br>
+                </div>
+                <div class="text-center">
+                    <img id="teaser" width="90%" src="img/teaser.jpg"/>
+                    </img>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <h3>
+                    Examples from Varoius Datasets
+                </h3>
+                <div class="text-justify">
+                    Garden - mip-NeRF 360 dataset:
+                    <br><br>
+                </div>
+                 <div class="video-compare-container" id="gardenDiv">
+                    <video class="video" id="garden" loop playsinline autoPlay muted src="video/garden.mp4" onplay="resizeAndPlay(this)"></video>
+                    <canvas height=0 class="videoMerge" id="gardenMerge"></canvas>
+                </div>
+                <div class="text-justify">
+                    Playground - Tanks and Temples dataset:
+                    <br><br>
+                </div>
+                 <div class="video-compare-container" id="playgroundDiv">
+                    <video class="video" id="playground" loop playsinline autoPlay muted src="video/playground.mp4" onplay="resizeAndPlay(this)"></video>
+                    <canvas height=0 class="videoMerge" id="playgroundMerge"></canvas>
+                </div>
+                <div class="text-justify">
+                    Basket - Light Fields dataset:
+                    <br><br>
+                </div>
+                 <div class="video-compare-container" id="basketDiv">
+                    <video class="video" id="basket" loop playsinline autoPlay muted src="video/basket.mp4" onplay="resizeAndPlay(this)"></video>
+                    <canvas height=0 class="videoMerge" id="basketMerge"></canvas>
+                </div>
+                <div class="text-justify">
+                    Plant - Nerfbusters dataset:
+                    <br><br>
+                </div>
+                 <div class="video-compare-container" id="plantDiv">
+                    <video class="video" id="plant" loop playsinline autoPlay muted src="video/plant.mp4" onplay="resizeAndPlay(this)"></video>
+                    <canvas height=0 class="videoMerge" id="plantMerge"></canvas>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <h3>
+                    Citation
+                </h3>
+                <div class="form-group col-md-10 col-md-offset-1">
+                    <textarea id="bibtex" class="form-control" readonly>
+@misc{segre2024vfnerf,
+    title={VF-NeRF: Viewshed Fields for Rigid NeRF Registration},
+    author={Leo Segre and Shai Avidan},
+    year={2024},
+    eprint={2404.03349},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
+}
+         </textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <p class="text-justify">
+                    <br>
+                The website template was borrowed from <a href="https://dorverbin.github.io/refnerf/">Dor Verbin</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+</body></html>
