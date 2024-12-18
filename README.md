@@ -1,16 +1,24 @@
 # Optimize the Unseen - Fast NeRF Cleanup with Free Space Prior
-### [Project Page](https://leosegre.github.io/optimize-the-unseen/) | [Paper](TBD)
+### [Project Page](https://leosegre.github.io/optimize-the-unseen/) | [Paper](https://arxiv.org/abs/2412.12772)
 
 By [Leo Segre](https://scholar.google.co.il/citations?hl=iw&user=A7FWhoIAAAAJ) and [Shai Avidan](https://scholar.google.co.il/citations?hl=iw&user=hpItE1QAAAAJ)
 
-This repo is the official implementation of "TBD".
+This repo is the official implementation of "[Optimize the Unseen - Fast NeRF Cleanup with Free Space Prior](https://arxiv.org/abs/2412.12772)".
 
 https://github.com/user-attachments/assets/2a192776-624d-449f-b516-69d8621a68f0
 
 ## Citation
 If you find this useful, please cite this work as follows:
 ```bibtex
-
+@misc{segre2024optimizeunseenfast,
+      title={Optimize the Unseen -- Fast NeRF Cleanup with Free Space Prior}, 
+      author={Leo Segre and Shai Avidan},
+      year={2024},
+      eprint={2412.12772},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2412.12772}, 
+}
 ```
 
 ### About
