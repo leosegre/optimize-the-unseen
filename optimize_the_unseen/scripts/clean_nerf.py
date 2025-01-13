@@ -21,14 +21,6 @@ from nerfstudio.model_components.losses import MSELoss
 import yaml
 import functools
 from nerfstudio.engine.callbacks import TrainingCallback, TrainingCallbackAttributes, TrainingCallbackLocation
-from nerfstudio.engine.schedulers import (
-    CosineDecaySchedulerConfig,
-    ExponentialDecaySchedulerConfig,
-    MultiStepSchedulerConfig,
-)
-import os
-from nerfstudio.engine.optimizers import AdamOptimizerConfig, RAdamOptimizerConfig
-
 
 @dataclass
 class CleanNeRF:
@@ -44,10 +36,6 @@ class CleanNeRF:
     samples_per_step: int = 131072
     # seed
     seed: int = 42
-    # lambda for opacities loss
-    opacities_lambda: float = 0.000001
-    # lambda for gsplat loss
-    gsplat_lambda: float = 1.0
 
 
 
@@ -90,31 +78,8 @@ class CleanNeRF:
         train_config.load_step = self.load_step
         train_config.save_only_latest_checkpoint = False
         train_config.vis = None
-        train_config.optimizers["opacities"]["scheduler"] = ExponentialDecaySchedulerConfig(
-                lr_final=1.6e-8,
-                max_steps=20000,
-            )
-        train_config.optimizers["opacities"]["optimizer"] = AdamOptimizerConfig(lr=0.001, eps=1e-15)
-        # import ipdb; ipdb.set_trace()
         trainer = train_config.setup()
         trainer.setup()
-        trainer.optimizers = trainer.setup_optimizers()
-
-        load_dir = trainer.config.load_dir
-        load_step = trainer.config.load_step
-        if load_step is None:
-            print("Loading latest Nerfstudio checkpoint from load_dir...")
-            # NOTE: this is specific to the checkpoint name format
-            load_step = sorted(int(x[x.find("-") + 1: x.find(".")]) for x in os.listdir(load_dir))[-1]
-        load_path: Path = load_dir / f"step-{load_step:09d}.ckpt"
-        assert load_path.exists(), f"Checkpoint {load_path} does not exist"
-        loaded_state = torch.load(load_path, map_location="cpu")
-        trainer.optimizers.load_optimizers(loaded_state["optimizers"])
-        # trainer.optimizers.optimizers["opacities"].param_groups[0]["lr"] = 0.0001
-        if "schedulers" in loaded_state and trainer.config.load_scheduler:
-            trainer.optimizers.load_schedulers(loaded_state["schedulers"])
-        trainer.grad_scaler.load_state_dict(loaded_state["scalers"])
-
 
         start_time = time.time()
 
@@ -126,15 +91,6 @@ class CleanNeRF:
 
         train_pipeline.train()
 
-        # add a scheduler to the optimizer of opacities
-        # import ipdb; ipdb.set_trace()
-        # trainer.optimizers.schedulers["opacities"] = (ExponentialDecaySchedulerConfig(
-        #         lr_final=1.6e-6,
-        #         max_steps=30000,
-        #     ).setup().get_scheduler(optimizer=trainer.optimizers.optimizers["opacities"], lr_init=1.6e-2))
-        # print(trainer.optimizers.schedulers)
-
-
         original_optimizers = trainer.optimizers.optimizers
         trainer.callbacks = train_pipeline.get_training_callbacks(
             TrainingCallbackAttributes(
@@ -142,88 +98,62 @@ class CleanNeRF:
             )
         )
 
-
-        # print(trainer.optimizers.schedulers["opacities"].get_last_lr())
-        # print(trainer.optimizers.schedulers["means"].get_last_lr())
-        cpu_or_cuda_str: str = trainer.device.split(":")[0]
-
-        list_num_gauss = []
-        list_opacities_loss = []
-        list_gsplat_loss = []
-
         for step in range(self.iters):
             print("step", step)
 
-            # training callbacks before the training iteration
-            for callback in trainer.callbacks:
-                callback.run_callback_at_location(
-                    step, location=TrainingCallbackLocation.BEFORE_TRAIN_ITERATION
-                )
+            # Assuming self.aabb is a tensor of shape (2, 3) where the first row is the min corner
+            # and the second row is the max corner of the AABB.
+            min_corner = self.aabb[0]
+            max_corner = self.aabb[1]
 
-            needs_zero = [group for group in trainer.optimizers.parameters.keys() if step % trainer.gradient_accumulation_steps[group] == 0]
-            trainer.optimizers.zero_grad_some(needs_zero)
-            with torch.autocast(device_type=cpu_or_cuda_str, enabled=trainer.mixed_precision):
-                _, loss_dict, metrics_dict = trainer.pipeline.get_train_loss_dict(step=step)
-                splat_loss = functools.reduce(torch.add, loss_dict.values())
-                # # choose random indices of 0.5 of the gaussians
-                # weights = torch.ones_like(train_pipeline.model.gauss_params["opacities"]).squeeze()
-                # weights /= weights.sum()
-                # random_indices = torch.multinomial(weights, int(weights.shape[0] * 0.1), replacement=False)
-                opacities_loss = train_pipeline.model.gauss_params["opacities"].mean()
-                loss = self.opacities_lambda * opacities_loss + self.gsplat_lambda * splat_loss
-                # loss = self.opacities_lambda * opacities_loss
-                print("loss", loss.item())
-                print("opacities_loss", opacities_loss.item())
-                # print(train_pipeline.model.gauss_params["opacities"])
-                # print("opacities lr", trainer.optimizers.schedulers["opacities"].get_last_lr())
-                # print("means lr", trainer.optimizers.schedulers["means"].get_last_lr())
-            trainer.grad_scaler.scale(loss).backward()  # type: ignore
-            needs_step = [
-                group
-                for group in trainer.optimizers.parameters.keys()
-                if step % trainer.gradient_accumulation_steps[group] == trainer.gradient_accumulation_steps[group] - 1
-            ]
-            # import ipdb; ipdb.set_trace()
-            trainer.optimizers.optimizer_scaler_step_some(trainer.grad_scaler, needs_step)
+            # Generate random points within the AABB
+            random_points = torch.rand((self.samples_per_step, 3), device=self.aabb.device) * (
+                        max_corner - min_corner) + min_corner
 
-            scale = trainer.grad_scaler.get_scale()
-            trainer.grad_scaler.update()
-            # If the gradient scaler is decreased, no optimization step is performed so we should not step the scheduler.
-            if scale <= trainer.grad_scaler.get_scale():
-                trainer.optimizers.scheduler_step_all(step)
+            # Compute the density field at the random points
+            train_density, train_rgb_embeddings = self.get_density_from_pipeline(train_pipeline, random_points, normalize=False)
+            train_proposal_density = []
+            # compute the density field at the random points for proposal networks
+            for i_level in range(train_pipeline.model.proposal_sampler.num_proposal_network_iterations):
+                train_proposal_density.append(train_pipeline.model.density_fns[i_level](random_points))
+            train_proposal_density = torch.stack(train_proposal_density)
+
+            density_mask = torch.zeros_like(train_density)
+            proposal_density_mask = torch.zeros_like(train_proposal_density)
+
+            clean_density = density_mask.detach()
+            clean_proposal_density = proposal_density_mask.detach()
+            train_density = torch.sigmoid(train_density)
+            clean_density = torch.sigmoid(clean_density).detach()
+            train_proposal_density = torch.sigmoid(train_proposal_density)
+            clean_proposal_density = torch.sigmoid(clean_proposal_density).detach()
 
 
-            # import ipdb; ipdb.set_trace()
-            # training callbacks after the training iteration
-            for callback in trainer.callbacks:
-                callback.run_callback_at_location(
-                    step, location=TrainingCallbackLocation.AFTER_TRAIN_ITERATION
-                )
+            cpu_or_cuda_str: str = trainer.device.split(":")[0]
 
-            num_gauss = train_pipeline.model.gauss_params["opacities"].shape[0]
+            density_lambda = 0.1
+            nerf_lambda = 1.0
+            proposal_density_lamba = 0.01
 
-            # store num_gauss, opacities loss and gsplat loss for each iteration, later use it to plot.
-            list_num_gauss.append(num_gauss)
-            list_opacities_loss.append(opacities_loss.item())
-            list_gsplat_loss.append(splat_loss.item())
+            proposal_density_loss = self.density_loss(train_proposal_density, clean_proposal_density)
+            density_loss = self.density_loss(train_density, clean_density)
 
-        # plot the opacities loss and gsplat loss and num_gauss
-        import matplotlib.pyplot as plt
-        plt.plot(list_num_gauss)
-        plt.xlabel("iteration")
-        plt.ylabel("num_gauss")
-        plt.show()
+            _, loss_dict, metrics_dict = trainer.pipeline.get_train_loss_dict(step=trainer._start_step + step)
+            nerf_loss = functools.reduce(torch.add, loss_dict.values())
 
-        plt.plot(list_opacities_loss)
-        plt.xlabel("iteration")
-        plt.ylabel("opacities_loss")
-        plt.show()
+            loss = density_lambda * density_loss + nerf_lambda * nerf_loss \
+                        + proposal_density_lamba * proposal_density_loss
+            print("loss", loss.item())
 
-        plt.plot(list_gsplat_loss)
-        plt.xlabel("iteration")
-        plt.ylabel("gsplat_loss")
-        plt.show()
-
+            with (torch.autocast(device_type=cpu_or_cuda_str, enabled=trainer.mixed_precision)):
+                if ~(torch.isnan(loss) | torch.isinf(loss)):
+                    trainer.optimizers.zero_grad_all()
+                    trainer.grad_scaler.scale(loss).backward()
+                    trainer.optimizers.optimizer_scaler_step_all(trainer.grad_scaler)
+                    trainer.grad_scaler.update()
+                    trainer.optimizers.scheduler_step_all(trainer._start_step + step)
+                else:
+                    print("backward skipped")
 
         end_time = time.time()
         print("Done")
