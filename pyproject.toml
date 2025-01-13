@@ -5,6 +5,9 @@ version = "0.1"
 [tool.setuptools]
 packages = ["optimize_the_unseen"]
 
+[project.entry-points.'nerfstudio.dataparser_configs']
+nb-dataparser = 'optimize_the_unseen.dataparsers.nerfbusters.nerfbuster_config:nbDataparser'
+
 [project.scripts]
 ns-clean-nerf = "optimize_the_unseen.scripts.clean_nerf:entrypoint"
-
+ns-eval-cleanup = "optimize_the_unseen.scripts.eval:entrypoint"
