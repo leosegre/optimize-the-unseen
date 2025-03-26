@@ -105,57 +105,87 @@
         <div class="row">
             <div class="col-md-8 col-md-offset-2">
                 <h3>
-                    Density Cleanup
+                    Examples from Varoius Datasets and NeRF Implementations
                 </h3>
-                <div class="text-justify">
-                    Visualization of how Free Space Prior works on a NeRF scene (Pikachu scene from Nerfbusters dataset):
-                    <br><br>
-                </div>
                 <div class="text-center">
-                    <img id="teaser" width="90%" src="img/teaser.jpg"/>
-                    </img>
+                    <strong style="font-size: 1.5em;">
+                        <br>
+                    LeRF Model - "Lego" prompt - LeRF dataset:
+                    </strong>
                 </div>
-            </div>
-        </div>
+                 <div class="video-compare-container" id="lerfDiv">
+                    <video class="video" id="lerf" loop playsinline autoPlay muted src="video/lerf_lerf_lego.mp4" onplay="resizeAndPlay(this)"></video>
+                    <canvas height=0 class="videoMerge" id="lerfMerge"></canvas>
+                </div>
+<div class="text-center">
+    <strong style="font-size: 1.5em;">
+        <br>
+        SeathruNeRF - Curasao scene - Seathru dataset:
+    </strong>
+</div>
+<div class="video-compare-container" id="seathruDiv">
+    <video class="video" id="seathru" loop playsinline autoPlay muted src="video/seathru_curasao.mp4" onplay="resizeAndPlay(this)"></video>
+    <canvas height=0 class="videoMerge" id="seathruMerge"></canvas>
+</div>
 
-        <div class="row">
-            <div class="col-md-8 col-md-offset-2">
-                <h3>
-                    Examples from Varoius Datasets
-                </h3>
-                <div class="text-justify">
-                    Garden - mip-NeRF 360 dataset:
-                    <br><br>
-                </div>
-                 <div class="video-compare-container" id="gardenDiv">
-                    <video class="video" id="garden" loop playsinline autoPlay muted src="video/garden.mp4" onplay="resizeAndPlay(this)"></video>
-                    <canvas height=0 class="videoMerge" id="gardenMerge"></canvas>
-                </div>
-                <div class="text-justify">
-                    Playground - Tanks and Temples dataset:
-                    <br><br>
-                </div>
-                 <div class="video-compare-container" id="playgroundDiv">
-                    <video class="video" id="playground" loop playsinline autoPlay muted src="video/playground.mp4" onplay="resizeAndPlay(this)"></video>
-                    <canvas height=0 class="videoMerge" id="playgroundMerge"></canvas>
-                </div>
-                <div class="text-justify">
-                    Basket - Light Fields dataset:
-                    <br><br>
-                </div>
-                 <div class="video-compare-container" id="basketDiv">
-                    <video class="video" id="basket" loop playsinline autoPlay muted src="video/basket.mp4" onplay="resizeAndPlay(this)"></video>
-                    <canvas height=0 class="videoMerge" id="basketMerge"></canvas>
-                </div>
-                <div class="text-justify">
-                    Plant - Nerfbusters dataset:
-                    <br><br>
-                </div>
-                 <div class="video-compare-container" id="plantDiv">
-                    <video class="video" id="plant" loop playsinline autoPlay muted src="video/plant.mp4" onplay="resizeAndPlay(this)"></video>
-                    <canvas height=0 class="videoMerge" id="plantMerge"></canvas>
-                </div>
-            </div>
+<div class="text-center">
+    <strong style="font-size: 1.5em;">
+        <br>
+        Instant-NGP - Garden - mip-NeRF 360 dataset:
+    </strong>
+</div>
+<div class="video-compare-container" id="ingpgardenDiv">
+    <video class="video" id="ingpgarden" loop playsinline autoPlay muted src="video/ingp_garden.mp4" onplay="resizeAndPlay(this)"></video>
+    <canvas height=0 class="videoMerge" id="ingpgardenMerge"></canvas>
+</div>
+
+<div class="text-center">
+    <strong style="font-size: 1.5em;">
+        <br>
+        Open-NeRF model - KITTI-360 dataset:
+    </strong>
+
+</div>
+<div class="video-compare-container" id="opennerfDiv">
+    <video class="video" id="opennerf" loop playsinline autoPlay muted src="video/opennerf_kitti.mp4" onplay="resizeAndPlay(this)"></video>
+    <canvas height=0 class="videoMerge" id="opennerfMerge"></canvas>
+</div>
+
+<div class="text-center">
+    <strong style="font-size: 1.5em;">
+        <br>
+        Nerfacto model - Playground - Tanks and Temples dataset:
+    </strong>
+
+</div>
+<div class="video-compare-container" id="playgroundDiv">
+    <video class="video" id="playground" loop playsinline autoPlay muted src="video/playground.mp4" onplay="resizeAndPlay(this)"></video>
+    <canvas height=0 class="videoMerge" id="playgroundMerge"></canvas>
+</div>
+
+<div class="text-center">
+    <strong style="font-size: 1.5em;">
+        <br>
+        Nerfacto model - Basket - Light Fields dataset:
+    </strong>
+
+</div>
+<div class="video-compare-container" id="basketDiv">
+    <video class="video" id="basket" loop playsinline autoPlay muted src="video/basket.mp4" onplay="resizeAndPlay(this)"></video>
+    <canvas height=0 class="videoMerge" id="basketMerge"></canvas>
+</div>
+
+<div class="text-center">
+    <strong style="font-size: 1.5em;">
+        <br>
+        Nerfacto model - Plant - Nerfbusters dataset:
+    </strong>
+
+</div>
+<div class="video-compare-container" id="plantDiv">
+    <video class="video" id="plant" loop playsinline autoPlay muted src="video/plant.mp4" onplay="resizeAndPlay(this)"></video>
+    <canvas height=0 class="videoMerge" id="plantMerge"></canvas>
+</div>            </div>
         </div>
 
 
