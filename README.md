@@ -1,4 +1,5 @@
 # Optimize the Unseen - Fast NeRF Cleanup with Free Space Prior
+## NeurIPS 2025
 ### [Project Page](https://leosegre.github.io/optimize-the-unseen/) | [Paper](https://arxiv.org/abs/2412.12772)
 
 By [Leo Segre](https://scholar.google.co.il/citations?hl=iw&user=A7FWhoIAAAAJ) and [Shai Avidan](https://scholar.google.co.il/citations?hl=iw&user=hpItE1QAAAAJ)
